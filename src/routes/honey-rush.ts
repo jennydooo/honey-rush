@@ -5,6 +5,6 @@ import {
 
 const router = express.Router()
 
-router.post('/create', createGameHoneyRush)
+router.get('/spin', createGameHoneyRush)
 
 export default router

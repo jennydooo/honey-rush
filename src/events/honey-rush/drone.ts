@@ -1,39 +1,72 @@
-import {
-    searchSlotRelateFollowFormula,
-    changeIntoCenterValue
-} from "@/utils/index"
-import {
-    WILDS
-} from "@/utils/constants"
+import { markSlotWin, convertToArray, getChainWinEachDrop } from "@/utils"
+import { WILDS, ICONS_POSITION_INDEX, DIMENSION_ICON_GAME } from "@/utils/constants"
 
-export const droneColony = (array2D: any[][]) => {
-    const index = 3 // center position
-    const index2D = 3 // center position
-    const centerValue = array2D[index2D][index]
-    const arrAdjacentWithCenterPosition = searchSlotRelateFollowFormula(array2D, index2D, index)
-    const array2DAfterChange = changeIntoCenterValue(array2D, arrAdjacentWithCenterPosition, centerValue)
-    return randomPositionWild(array2DAfterChange, arrAdjacentWithCenterPosition, centerValue)
+export const droneColony = (array: string, numberRandomEvent: number) => {
+    let arrayNumber = convertToArray(array)
+    const indexCenter = 19
+    const valueCenter = arrayNumber[indexCenter - 1]
+    const dimensionItemCenter = DIMENSION_ICON_GAME[indexCenter - 1]
+    dimensionItemCenter.nextStep.forEach((item, index) => {
+        arrayNumber[item - 1] = valueCenter
+    })
+
+
+    numberRandomEvent = numberRandomEvent - 7
+
+    if (numberRandomEvent > 0) {
+        arrayNumber = randomPositionCanCreateChainWinWhenTriggerEvent(arrayNumber, numberRandomEvent, valueCenter)
+    }
+
+    const wildPosition = randomPositionCanCreateChainWin(arrayNumber)
+    arrayNumber[wildPosition - 1] = randomPosition(WILDS)
+    return arrayNumber.join(",")
+
+}
+// random các vị trí còn lại có thể tạo thành chuỗi win khi trigger event drone, queen, worker
+const randomPositionCanCreateChainWinWhenTriggerEvent = (
+    arrayNumber: number[],
+    numberRandomEvent: number,
+    valueCenter: number
+): number[] => {
+    const positionRandom = randomPositionCanCreateChainWin(arrayNumber)
+    arrayNumber[positionRandom - 1] = valueCenter
+    numberRandomEvent = numberRandomEvent - 1
+
+    if (numberRandomEvent > 0) {
+        return randomPositionCanCreateChainWinWhenTriggerEvent(arrayNumber, numberRandomEvent, valueCenter)
+    }
+
+    return arrayNumber
 }
 
+// random vị trí có giá trị khác với vị trí trung tâm và có thể liên kết để tạo thành chuỗi win
+const randomPositionCanCreateChainWin = (arrayNumber: number[]): number => {
+    let chainIndexWin: number[] = []
 
-const randomPositionWild = (array2D: any[][], positionRelative: any[], centerValue: number): any[][] => {
-    const random = positionRelative[Math.floor(Math.random() * 6)]
-    const [index2D, index] = random.split(',').map(Number)
-    const arrayDifferenceValue = searchSlotRelateFollowFormula(array2D, index2D, index).filter(item => {
-        const [_, __, value] = item.split(',').map(Number)
-        return array2D[index2D][index] != value
-    })
-    while (arrayDifferenceValue.length == 0) {
-        return randomPositionWild(array2D, positionRelative, centerValue)
-    }
-    const [index2DRandom, indexRandom] = arrayDifferenceValue[Math.floor(Math.random() * arrayDifferenceValue.length)].split(',').map(Number)
-    const randomValue = array2D[index2DRandom][indexRandom]
+    for (let index = 1; index <= arrayNumber.length; index++) {
+        chainIndexWin = [index]
+        const value = arrayNumber[index - 1]
+        getChainWinEachDrop(arrayNumber, chainIndexWin, value, index)
 
-    if (randomValue == centerValue || WILDS.includes(randomValue)) {
-        return randomPositionWild(array2D, positionRelative, centerValue)
+        if (chainIndexWin.length > 4) {
+            break
+        }
     }
 
-    array2D[index2DRandom][indexRandom] = WILDS[Math.floor(Math.random() * WILDS.length)]
+    // random vị trí ngẫu nhiên có value giống với vị trí trung tâm
+    let stepDimension
+    do {
+        const positionRadomRelateCenter = randomPosition(chainIndexWin)
+        stepDimension = DIMENSION_ICON_GAME[positionRadomRelateCenter - 1].nextStep
+        stepDimension = stepDimension.filter((item) => {
+            return !chainIndexWin.includes(item)
+        })
+    } while (stepDimension.length == 0)
 
-    return array2D
+    return randomPosition(stepDimension)
+}
+
+const randomPosition = (array: number[]): number => {
+    const randomIndex = Math.floor(Math.random() * array.length)
+    return array[randomIndex]
 }

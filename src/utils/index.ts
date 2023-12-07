@@ -12,7 +12,6 @@ export const getChainWinEachDrop = (arrayNumber: number[], chainIndexWin: number
 
     // các bước tiếp theo có thể đi được
     const stepCanMoveAndHaveSameValue = getStepCanMoveAndHaveSameValue(arrayNumber, nextStep, chainIndexWin, value)
-
     if (stepCanMoveAndHaveSameValue.length === 0) {
         return chainIndexWin
     }
@@ -30,8 +29,14 @@ const getStepCanMoveAndHaveSameValue = (arrayNumber: number[], nextStep: number[
 
 export const markSlotWin = (arrayNumber: number[], chainIndexWin: number[]) => {
     chainIndexWin.forEach(index => {
-        arrayNumber[index - 1] = -1
+        if (!WILDS.includes(arrayNumber[index - 1]))
+            arrayNumber[index - 1] = -1
     })
 
     return arrayNumber
+}
+
+export const randomPosition = (array: number[]): number => {
+    const randomIndex = Math.floor(Math.random() * array.length)
+    return array[randomIndex]
 }

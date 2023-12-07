@@ -66,7 +66,7 @@ export const DIMENSION_ICON_GAME = [
     },
     {
         id: 2,
-        nextStep: [3, 7, 6]
+        nextStep: [3, 7, 6, 1]
     },
     {
         id: 3,

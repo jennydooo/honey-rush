@@ -1,24 +1,30 @@
-import { markSlotWin, convertToArray, getChainWinEachDrop } from "@/utils"
+import { convertToArray, getChainWinEachDrop, randomPosition } from "@/utils"
 import { WILDS, ICONS_POSITION_INDEX, DIMENSION_ICON_GAME } from "@/utils/constants"
 
-export const droneColony = (array: string, numberRandomEvent: number) => {
+export const droneColony = (array: string, type: string, numberRandomEvent: number) => {
     let arrayNumber = convertToArray(array)
     const indexCenter = 19
     const valueCenter = arrayNumber[indexCenter - 1]
-    const dimensionItemCenter = DIMENSION_ICON_GAME[indexCenter - 1]
-    dimensionItemCenter.nextStep.forEach((item, index) => {
+    // tìm những vị trí ở trung tâm có giá trị khác với wild và giá trị trung tâm
+    const dimensionItemCenterNextStep = DIMENSION_ICON_GAME[indexCenter - 1].nextStep.filter((item) => {
+        return !WILDS.includes(arrayNumber[item - 1]) && arrayNumber[item - 1] != valueCenter
+    })
+
+    dimensionItemCenterNextStep.forEach((item, index) => {
         arrayNumber[item - 1] = valueCenter
     })
 
 
-    numberRandomEvent = numberRandomEvent - 7
+    numberRandomEvent = numberRandomEvent - dimensionItemCenterNextStep.length
 
     if (numberRandomEvent > 0) {
         arrayNumber = randomPositionCanCreateChainWinWhenTriggerEvent(arrayNumber, numberRandomEvent, valueCenter)
     }
 
-    const wildPosition = randomPositionCanCreateChainWin(arrayNumber)
-    arrayNumber[wildPosition - 1] = randomPosition(WILDS)
+    if (type === 'drone') {
+        const wildPosition = randomPositionCanCreateChainWin(arrayNumber)
+        arrayNumber[wildPosition - 1] = randomPosition(WILDS)
+    }
     return arrayNumber.join(",")
 
 }
@@ -66,7 +72,3 @@ const randomPositionCanCreateChainWin = (arrayNumber: number[]): number => {
     return randomPosition(stepDimension)
 }
 
-const randomPosition = (array: number[]): number => {
-    const randomIndex = Math.floor(Math.random() * array.length)
-    return array[randomIndex]
-}
